@@ -3,7 +3,7 @@
   <Role name="Consumer">
     <Instances count="2" />
     <ConfigurationSettings>
-      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="DefaultEndpointsProtocol=https;AccountName=acmestorageaccount;AccountKey=$(_acmestorageaccount.key_)" />
     </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>

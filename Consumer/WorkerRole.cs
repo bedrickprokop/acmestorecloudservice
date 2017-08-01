@@ -32,7 +32,7 @@ namespace Consumer
             }
 
             var cloudQueueClient = cloudStorageAccount.CreateCloudQueueClient();
-            queueNotification = cloudQueueClient.GetQueueReference("queueNotification");
+            queueNotification = cloudQueueClient.GetQueueReference("queuenotification");
 
             queueNotification.CreateIfNotExists();
         }
