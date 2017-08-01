@@ -9,6 +9,7 @@ using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Diagnostics;
 using Microsoft.WindowsAzure.ServiceRuntime;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace Consumer
 {
@@ -16,6 +17,39 @@ namespace Consumer
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private readonly ManualResetEvent runCompleteEvent = new ManualResetEvent(false);
+
+        static CloudQueue queueNotification;
+
+        public static void ConnectToQueue()
+        {
+            var connectionString = "DefaultEndpointsProtocol=https;AccountName=acmestorageaccount;AccountKey=S5qfkwPaILx8dj2RGSreusmN+peF2S9mxriTmM51mXBLiemaWwb7nRvqdBMkffAeV5EXlAMRA3/7E0bY/OFhxg==;EndpointSuffix=core.windows.net";
+            CloudStorageAccount cloudStorageAccount;
+
+            if (!CloudStorageAccount.TryParse(connectionString, out cloudStorageAccount))
+            {
+                Console.WriteLine("Expected connection string 'Azure Storage Account to be a valid Azure" +
+                    " Storage Connection  String'");
+            }
+
+            var cloudQueueClient = cloudStorageAccount.CreateCloudQueueClient();
+            queueNotification = cloudQueueClient.GetQueueReference("queueNotification");
+
+            queueNotification.CreateIfNotExists();
+        }
+
+        public void GetMessageFromQueue()
+        {
+            CloudQueueMessage cloudQueueMessage = queueNotification.GetMessage();
+            if (cloudQueueMessage == null)
+            {
+                return;
+            }
+
+            Trace.TraceInformation("Get message from Queue and make the push notification");
+            String message = cloudQueueMessage.AsString;
+            //TODO enviar push notification
+            //cloudQueueTwo.DeleteMessage(cloudQueueMessage);
+        }
 
         public override void Run()
         {
@@ -61,9 +95,13 @@ namespace Consumer
         private async Task RunAsync(CancellationToken cancellationToken)
         {
             // TODO: substitua o item a seguir pela sua própria lógica.
+            ConnectToQueue();
             while (!cancellationToken.IsCancellationRequested)
             {
                 Trace.TraceInformation("Working");
+
+                GetMessageFromQueue();
+
                 await Task.Delay(1000);
             }
         }
