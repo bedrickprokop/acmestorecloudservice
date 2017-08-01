@@ -10,6 +10,8 @@ using Microsoft.WindowsAzure.Diagnostics;
 using Microsoft.WindowsAzure.ServiceRuntime;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
+using System.Text;
+using System.IO;
 
 namespace Consumer
 {
@@ -47,8 +49,32 @@ namespace Consumer
 
             Trace.TraceInformation("Get message from Queue and make the push notification");
             String message = cloudQueueMessage.AsString;
-            //TODO enviar push notification
-            //cloudQueueTwo.DeleteMessage(cloudQueueMessage);
+
+            MessageQueue messageQueue = Newtonsoft.Json.JsonConvert.DeserializeObject<MessageQueue>(message);
+            String userToken = messageQueue.user.token.Trim();
+            if (null != userToken && userToken.Length > 0) {
+                var postData = "{\"data\": " + message + ", \"to\":\"" + messageQueue.user.token + "\"}";
+                var request = (HttpWebRequest)WebRequest.Create("https://gcm-http.googleapis.com/gcm/send");
+                request.Method = "POST";
+                request.ContentLength = postData.Length;
+                request.ContentType = "application/json";
+                request.PreAuthenticate = true;
+                request.Headers.Add("Authorization", "key=AAAAMBsEGmw:APA91bHLRhf7yNfbcBcskn-BJm0lqgOqzdpHTONEhM5l7zki1Mjn2mxpWmFkkir6NC2CDsBQkh3-u7prv-to433N0gA5UepcWnDTK1J6uz1EaAJhQzujPmcJ5VMn-ZsQ0u-yJQ1VnhK2");
+
+                var data = Encoding.ASCII.GetBytes(postData);
+                using (var stream = request.GetRequestStream())
+                {
+                    stream.Write(data, 0, data.Length);
+                }
+
+                var response = (HttpWebResponse)request.GetResponse();
+                //var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+
+                if (response.StatusCode.Equals(200))
+                {
+                    queueNotification.DeleteMessage(cloudQueueMessage);
+                }
+            }
         }
 
         public override void Run()
