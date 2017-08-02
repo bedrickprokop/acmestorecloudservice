@@ -70,7 +70,7 @@ namespace Consumer
                 var response = (HttpWebResponse)request.GetResponse();
                 //var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
 
-                if (response.StatusCode.Equals(200))
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     queueNotification.DeleteMessage(cloudQueueMessage);
                 }
